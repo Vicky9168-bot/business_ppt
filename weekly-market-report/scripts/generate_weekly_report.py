@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-2026 W6 (2/3-2/9) 財金股市週報 — PPT 生成腳本
+早晨財經速解讀 2026-04-24 市場分析報告 — PPT 生成腳本
 風格：Corporate Blue & White Business Theme
-內容：本週市場總覽、重大事件、總體經濟、產業趨勢、投資策略
-資料來源：財金號角 SRT (2/5, 2/6, 2/9)、股癌投資 EP633
+主題：費半破萬點 硬體狂飆 軟體失速 | 台股多殺多 股市大換手
+內容：費半連17紅站上萬點、硬體vs軟體分化、台股換股行情、台灣外銷訂單創新高、金管會鬆綁
+分析日期：2026-04-24
 """
 
 import os
@@ -31,7 +32,7 @@ OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'output', 'reports')
 TEMP_DIR = os.path.join(PROJECT_ROOT, 'output', 'temp')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
-OUTPUT_PPTX = os.path.join(OUTPUT_DIR, 'weekly_report.pptx')
+OUTPUT_PPTX = os.path.join(OUTPUT_DIR, '20260424_report.pptx')
 
 # Colors — Corporate Blue Theme
 CORP_BLUE = RGBColor(0x2B, 0x57, 0x9A)
@@ -212,17 +213,17 @@ def _add_header_bar(slide, title_text, subtitle_text=''):
         _add_text_box(slide, Inches(1.3), Inches(0.65), Inches(10), Inches(0.4),
                       subtitle_text, font_size=15, font_color=SKY_BLUE)
     _add_text_box(slide, Inches(10.5), Inches(0.15), Inches(2.5), Inches(0.4),
-                  '財金週報', font_size=16, font_color=WHITE, bold=True,
+                  '早晨財經速解讀', font_size=16, font_color=WHITE, bold=True,
                   alignment=PP_ALIGN.RIGHT)
     _add_text_box(slide, Inches(10.5), Inches(0.55), Inches(2.5), Inches(0.35),
-                  '2026.02.03 - 02.09', font_size=12, font_color=SKY_BLUE,
+                  '2026.04.24', font_size=12, font_color=SKY_BLUE,
                   alignment=PP_ALIGN.RIGHT)
 
 
 def _add_footer(slide, page_num, total_pages=TOTAL_PAGES):
     _add_bg_rect(slide, Inches(0), Inches(7.1), SLIDE_W, Inches(0.4), LIGHT_GRAY)
-    _add_text_box(slide, Inches(0.5), Inches(7.15), Inches(5), Inches(0.3),
-                  '2026 W6 財金股市週報 — 全面市場分析', font_size=10,
+    _add_text_box(slide, Inches(0.5), Inches(7.15), Inches(7), Inches(0.3),
+                  '早晨財經速解讀 — 2026.04.24 市場分析報告', font_size=10,
                   font_color=MID_GRAY)
     _add_text_box(slide, Inches(10), Inches(7.15), Inches(3), Inches(0.3),
                   f'{page_num} / {total_pages}', font_size=10,
@@ -257,256 +258,431 @@ def gen_charts():
     orange_hex = '#F59E0B'
     purple_hex = '#8E44AD'
 
-    # ── 1. Weekly US Indices Performance ──
+    # ── 1. US Indices 4/23 Performance ──
     fig, ax = plt.subplots(figsize=(11, 3.7))
-    indices = ['道瓊工業\n50,115', '標普 500\n6,026', '納斯達克\n19,523', '費城半導體\n4,856']
-    weekly_chg = [4.67, -0.24, -1.63, -3.12]
-    colors = [green_hex if v > 0 else red_hex for v in weekly_chg]
-    bars = ax.barh(indices, weekly_chg, color=colors, height=0.5, edgecolor='white', linewidth=1.5)
+    indices = ['道瓊工業\n49,310', '標普 500\n7,108', '納斯達克\n24,438', '費城半導體\n10,078']
+    daily_chg = [-0.36, -0.41, -0.89, 1.71]
+    colors = [green_hex if v > 0 else red_hex for v in daily_chg]
+    bars = ax.barh(indices, daily_chg, color=colors, height=0.5, edgecolor='white', linewidth=1.5)
     ax.axvline(x=0, color='#ccc', linewidth=1.2, linestyle='-')
-    for bar, val in zip(bars, weekly_chg):
-        x_pos = bar.get_width() + (0.15 if val >= 0 else -0.15)
-        ha = 'left' if val >= 0 else 'right'
+    for bar, val in zip(bars, daily_chg):
+        x_pos = bar.get_width() + 0.05 if val > 0 else bar.get_width() - 0.05
+        ha = 'left' if val > 0 else 'right'
+        label = f'+{val:.2f}%' if val > 0 else f'{val:.2f}%'
         ax.text(x_pos, bar.get_y() + bar.get_height() / 2,
-                f'{val:+.2f}%', va='center', ha=ha, fontsize=16,
+                label, va='center', ha=ha, fontsize=16,
                 fontweight='bold', color=bar.get_facecolor())
-    ax.set_xlim(-5, 6)
-    ax.set_title('美股四大指數本週表現（2026/2/3-2/7）', fontsize=18,
-                 fontweight='bold', color=blue_hex, pad=15)
+    ax.set_xlim(-1.5, 2.5)
+    ax.set_title('美股四大指數 — 費半連17紅突破10,000點！三大指數收黑（2026/04/23）',
+                 fontsize=17, fontweight='bold', color=blue_hex, pad=15)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
     ax.tick_params(axis='both', labelsize=14)
+    # Annotate SOX milestone
+    ax.annotate('歷史新高！', xy=(1.71, 3), xytext=(1.5, 2.5),
+                arrowprops=dict(arrowstyle='->', color=green_hex, lw=2),
+                fontsize=13, color=green_hex, fontweight='bold')
     fig.tight_layout()
     charts['weekly_us'] = fig_to_image_stream(fig)
 
-    # ── 2. Taiwan & Asia Weekly ──
-    fig, ax = plt.subplots(figsize=(11, 3.5))
-    asia_names = ['台灣加權\n23,611', '日經 225\n39,500', '恆生指數\n20,890',
-                  '上證指數\n3,280', '韓國 KOSPI\n2,520']
-    asia_chg = [2.48, 3.15, 1.82, 0.95, 1.35]
-    asia_colors = [green_hex if v > 0 else red_hex for v in asia_chg]
-    bars = ax.bar(range(len(asia_names)), asia_chg, color=asia_colors,
+    # ── 2. 台股成交量與走勢 ──
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+    # 台股收盤走勢（近期）
+    dates = ['4/17', '4/20', '4/21', '4/22', '4/23', '4/24']
+    taiex = [37200, 37800, 38100, 38900, 37600, 38434]
+    ax1.plot(dates, taiex, 'o-', color=blue_hex, linewidth=2.5, markersize=8)
+    ax1.fill_between(range(len(dates)), taiex, min(taiex)*0.99,
+                     alpha=0.15, color=blue_hex)
+    ax1.set_xticks(range(len(dates)))
+    ax1.set_xticklabels(dates, fontsize=11)
+    ax1.set_ylabel('點數', fontsize=12, color=blue_hex)
+    ax1.set_title('台股指數走勢（4/17-4/24）', fontsize=15, fontweight='bold',
+                  color=blue_hex, pad=10)
+    ax1.annotate('38,434\n（+720pt）', xy=(5, 38434), xytext=(3.5, 38700),
+                 arrowprops=dict(arrowstyle='->', color=green_hex, lw=1.5),
+                 fontsize=12, color=green_hex, fontweight='bold')
+    ax1.annotate('多殺多', xy=(4, 37600), xytext=(2.5, 37300),
+                 arrowprops=dict(arrowstyle='->', color=red_hex, lw=1.5),
+                 fontsize=12, color=red_hex, fontweight='bold')
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.set_ylim(36800, 39200)
+
+    # 成交量柱狀圖
+    volumes = [6500, 7200, 7800, 9500, 13000, 8200]
+    vol_colors = [blue_light_hex]*4 + [red_hex] + [blue_hex]
+    bars = ax2.bar(range(len(dates)), volumes, color=vol_colors, width=0.6,
+                   edgecolor='white', linewidth=1.5)
+    ax2.set_xticks(range(len(dates)))
+    ax2.set_xticklabels(dates, fontsize=11)
+    ax2.set_ylabel('成交量（億元）', fontsize=12, color=blue_hex)
+    ax2.set_title('台股日成交量（億元）', fontsize=15, fontweight='bold',
+                  color=blue_hex, pad=10)
+    ax2.annotate('歷史新高\n1.3兆', xy=(4, 13000), xytext=(2.5, 11500),
+                 arrowprops=dict(arrowstyle='->', color=red_hex, lw=1.5),
+                 fontsize=12, color=red_hex, fontweight='bold')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    fig.tight_layout()
+    charts['asia_weekly'] = fig_to_image_stream(fig)
+
+    # ── 3. 硬體 vs 軟體分化 (SOX vs IGV) ──
+    fig, ax = plt.subplots(figsize=(9, 3.8))
+    categories = ['費半 SOX\n連17紅', 'IGV 軟體\nETF', '納斯達克\n指數', 'QQQ\n科技ETF']
+    week_chg = [8.5, -7.2, 2.1, 2.8]
+    bar_colors = [green_hex if v > 0 else red_hex for v in week_chg]
+    bars = ax.bar(range(len(categories)), week_chg, color=bar_colors,
                   width=0.5, edgecolor='white', linewidth=1.5)
-    for i, (bar, val) in enumerate(zip(bars, asia_chg)):
-        y_pos = val + 0.12
-        ax.text(i, y_pos, f'+{val:.2f}%', ha='center', fontsize=14,
+    for i, (bar, val) in enumerate(zip(bars, week_chg)):
+        y_pos = val + 0.3 if val >= 0 else val - 0.8
+        label = f'+{val:.1f}%' if val > 0 else f'{val:.1f}%'
+        ax.text(i, y_pos, label, ha='center', fontsize=14,
                 fontweight='bold', color=bar.get_facecolor())
-    ax.set_xticks(range(len(asia_names)))
-    ax.set_xticklabels(asia_names, fontsize=12)
-    ax.set_title('亞股本週表現（2026/2/3-2/9）', fontsize=18,
+    ax.set_xticks(range(len(categories)))
+    ax.set_xticklabels(categories, fontsize=12)
+    ax.set_ylabel('近期漲跌（%）', fontsize=13, color=blue_hex)
+    ax.set_title('硬體 vs 軟體極端分化：費半+8.5% vs IGV軟體-7.2%', fontsize=17,
                  fontweight='bold', color=blue_hex, pad=15)
     ax.axhline(y=0, color='#ccc', linewidth=1)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
-    ax.set_ylim(0, 4.5)
+    ax.set_ylim(-10, 12)
     fig.tight_layout()
-    charts['asia_weekly'] = fig_to_image_stream(fig)
+    charts['software_pe'] = fig_to_image_stream(fig)
 
-    # ── 3. Bitcoin Crash ──
-    fig, ax = plt.subplots(figsize=(7.5, 3.5))
-    btc_months = ['2025/10', '11', '12', '2026/1', '2/3', '2/5', '2/6', '2/7']
-    btc_prices = [95000, 88000, 82000, 78000, 72000, 68000, 63000, 65000]
-    ax.plot(btc_months, btc_prices, 'o-', color=red_hex, linewidth=3,
-            markersize=10, zorder=5)
-    ax.fill_between(btc_months, btc_prices, alpha=0.15, color=red_hex)
-    ax.axhline(y=90000, color=orange_hex, linewidth=1.5, linestyle='--',
-               label='川普就任價位', alpha=0.8)
-    ax.axhline(y=50000, color='#999', linewidth=1, linestyle=':', label='200 週均線')
-    ax.legend(fontsize=13, loc='upper right', framealpha=0.9)
-    ax.set_ylabel('比特幣價格 (USD)', fontsize=14, color=blue_hex)
-    ax.set_title('比特幣崩跌：跌穿 $63,000，川普行情全數蒸發', fontsize=17,
+    # ── 4. 資金輪動：AI硬體 vs AI軟體 vs 其他板塊 ──
+    fig, ax = plt.subplots(figsize=(9, 4))
+    sectors = ['AI硬體\n(SOX)', 'AI軟體\n(IGV)', '能源\n(XLE)', '消費\n(XLY)', '公用事業\n(XLU)']
+    fund_flow = [35, -20, 5, -8, -12]
+    flow_colors = [green_hex if v > 0 else red_hex for v in fund_flow]
+    bars = ax.bar(range(len(sectors)), fund_flow, color=flow_colors,
+                  width=0.5, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, fund_flow)):
+        y_pos = val + 1.0 if val >= 0 else val - 2.5
+        label = f'+{val}' if val > 0 else f'{val}'
+        ax.text(i, y_pos, label, ha='center', fontsize=14,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_xticks(range(len(sectors)))
+    ax.set_xticklabels(sectors, fontsize=12)
+    ax.set_ylabel('相對資金流入（相對值）', fontsize=13, color=blue_hex)
+    ax.set_title('資金輪動：AI硬體獨佔鰲頭，其他板塊全面遭抽離', fontsize=17,
                  fontweight='bold', color=blue_hex, pad=15)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_color('#ddd')
-    ax.spines['left'].set_color('#ddd')
-    ax.set_ylim(40000, 100000)
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'${x/1000:.0f}K'))
-    fig.tight_layout()
-    charts['btc_crash'] = fig_to_image_stream(fig)
-
-    # ── 4. ISM PMI Recovery ──
-    fig, ax = plt.subplots(figsize=(8, 3.5))
-    pmi_years = ['2022', '2023\nQ1', 'Q2', 'Q3', 'Q4',
-                 '2024\nQ1', 'Q2', 'Q3', 'Q4',
-                 '2025\nQ1', 'Q2', 'Q3', 'Q4', '2026\n1月']
-    pmi_values = [52.8, 48.5, 47.2, 46.5, 47.8,
-                  48.2, 47.5, 48.8, 49.3,
-                  49.8, 48.5, 49.2, 50.5, 52.6]
-    colors_pmi = [green_hex if v >= 50 else red_hex for v in pmi_values]
-    bars = ax.bar(range(len(pmi_years)), pmi_values, color=colors_pmi,
-                  width=0.6, edgecolor='white', linewidth=1)
-    ax.axhline(y=50, color=blue_hex, linewidth=2, linestyle='--',
-               label='榮枯線 (50)', alpha=0.8)
-    ax.text(len(pmi_years) - 1, 52.6 + 0.8, '52.6', ha='center',
-            fontsize=15, fontweight='bold', color=green_hex)
-    ax.set_xticks(range(len(pmi_years)))
-    ax.set_xticklabels(pmi_years, fontsize=10.5)
-    ax.legend(fontsize=14, loc='lower right')
-    ax.set_ylabel('ISM PMI', fontsize=14, color=blue_hex)
-    ax.set_title('美國 ISM 製造業 PMI：突破 3 年庫存調整', fontsize=18,
-                 fontweight='bold', color=blue_hex, pad=15)
-    ax.set_ylim(43, 56)
+    ax.axhline(y=0, color='#ccc', linewidth=1)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
     fig.tight_layout()
-    charts['ism_pmi'] = fig_to_image_stream(fig)
+    charts['peg_trend'] = fig_to_image_stream(fig)
 
-    # ── 5. Value vs Growth ──
-    fig, ax = plt.subplots(figsize=(7.5, 3.5))
-    months = ['2025/10', '11', '12', '2026/1', '2/7']
-    value_returns = [0.5, 2.1, 3.8, 5.5, 7.2]
-    growth_returns = [1.2, -0.3, -1.8, -2.5, -3.0]
-    ax.plot(months, value_returns, 'o-', color=blue_hex, linewidth=3,
-            markersize=10, label='羅素1000 價值股', zorder=5)
-    ax.plot(months, growth_returns, 's-', color=red_hex, linewidth=3,
-            markersize=10, label='羅素1000 成長股', zorder=5)
-    ax.fill_between(months, value_returns, alpha=0.15, color=blue_hex)
-    ax.fill_between(months, growth_returns, alpha=0.15, color=red_hex)
-    ax.axhline(y=0, color='#999', linewidth=1, linestyle='--')
-    ax.legend(fontsize=15, loc='upper left', framealpha=0.9)
-    ax.set_ylabel('累積報酬率 (%)', fontsize=14, color=blue_hex)
-    ax.set_title('價值股 vs 成長股：2022 年以來最大分歧', fontsize=18,
-                 fontweight='bold', color=blue_hex, pad=15)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_color('#ddd')
-    ax.spines['left'].set_color('#ddd')
+    # ── 5. 特斯拉財報 Q1 2026 解析 ──
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+    tsla_cat = ['EPS 預期\n(Q1 2026)', 'EPS 實際\n(Q1 2026)', '資本支出\n(26年原預期)', '資本支出\n(26年實際)']
+    tsla_vals = [0.6, 0.25, 200, 250]
+    tsla_colors = [blue_hex, red_hex, blue_light_hex, orange_hex]
+    # Use two y-axes
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4))
+    # Left: EPS
+    eps_cats = ['預期 EPS\n$0.60', '實際 EPS\n$0.25']
+    eps_vals = [0.60, 0.25]
+    eps_colors = [blue_hex, red_hex]
+    bars1 = ax1.bar(range(len(eps_cats)), eps_vals, color=eps_colors, width=0.4,
+                    edgecolor='white', linewidth=1.5)
+    for bar, val in zip(bars1, eps_vals):
+        ax1.text(bar.get_x() + bar.get_width()/2, val + 0.02, f'${val:.2f}',
+                 ha='center', fontsize=14, fontweight='bold', color=bar.get_facecolor())
+    ax1.set_xticks(range(len(eps_cats)))
+    ax1.set_xticklabels(eps_cats, fontsize=12)
+    ax1.set_ylabel('每股盈餘（美元）', fontsize=12, color=blue_hex)
+    ax1.set_title('特斯拉 Q1 EPS\n連4季低於預期', fontsize=14, fontweight='bold',
+                  color=blue_hex, pad=10)
+    ax1.annotate('低於預期\n-58%', xy=(1, 0.25), xytext=(0.5, 0.5),
+                 arrowprops=dict(arrowstyle='->', color=red_hex, lw=1.5),
+                 fontsize=12, color=red_hex, fontweight='bold')
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.set_ylim(0, 0.85)
+    # Right: Capital expenditure
+    capex_cats = ['26年資本支出\n原估$200億', '26年資本支出\n實際$250億']
+    capex_vals = [200, 250]
+    capex_colors = [blue_hex, orange_hex]
+    bars2 = ax2.bar(range(len(capex_cats)), capex_vals, color=capex_colors, width=0.4,
+                    edgecolor='white', linewidth=1.5)
+    for bar, val in zip(bars2, capex_vals):
+        ax2.text(bar.get_x() + bar.get_width()/2, val + 5, f'${val}億',
+                 ha='center', fontsize=14, fontweight='bold', color=bar.get_facecolor())
+    ax2.set_xticks(range(len(capex_cats)))
+    ax2.set_xticklabels(capex_cats, fontsize=12)
+    ax2.set_ylabel('資本支出（億美元）', fontsize=12, color=blue_hex)
+    ax2.set_title('特斯拉 2026 CAPEX\n增加$50億至$250億', fontsize=14, fontweight='bold',
+                  color=blue_hex, pad=10)
+    ax2.annotate('+$50億\n+25%', xy=(1, 250), xytext=(0.5, 240),
+                 arrowprops=dict(arrowstyle='->', color=orange_hex, lw=1.5),
+                 fontsize=12, color=orange_hex, fontweight='bold')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.set_ylim(0, 310)
     fig.tight_layout()
-    charts['value_growth'] = fig_to_image_stream(fig)
+    charts['taiwan_export'] = fig_to_image_stream(fig)
 
-    # ── 6. Tech Capex War ──
-    fig, ax = plt.subplots(figsize=(10, 3.8))
-    companies = ['Google\n$1,800B', 'Amazon\n$2,000B', 'Meta\n$650B',
-                 'Microsoft\n$800B', 'Apple\n$200B']
-    capex_2025 = [800, 1300, 450, 550, 120]
-    capex_2026 = [1800, 2000, 650, 800, 200]
-    x = np.arange(len(companies))
-    w = 0.3
-    bars1 = ax.bar(x - w/2, capex_2025, w, color=accent_hex, label='2025 Capex',
-                   edgecolor='white', linewidth=1.5)
-    bars2 = ax.bar(x + w/2, capex_2026, w, color=blue_hex, label='2026E Capex',
-                   edgecolor='white', linewidth=1.5)
-    for bar, val in zip(bars2, capex_2026):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 30,
-                f'${val}B', ha='center', fontsize=12, fontweight='bold', color=blue_hex)
-    ax.set_xticks(x)
-    ax.set_xticklabels(companies, fontsize=12)
-    ax.set_ylabel('資本支出 (億美元)', fontsize=14, color=blue_hex)
-    ax.set_title('科技巨頭 2026 年資本支出軍備競賽', fontsize=18,
+    # ── 6. 台灣外銷訂單歷史新高 ──
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    months = ['2025\n10月', '2025\n11月', '2025\n12月', '2026\n1月', '2026\n2月', '2026\n3月']
+    orders = [720, 750, 810, 780, 820, 911]
+    order_colors = [blue_light_hex]*5 + ['#1a7a4a']
+    bars = ax.bar(range(len(months)), orders, color=order_colors,
+                  width=0.55, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, orders)):
+        y_pos = val + 10
+        label = f'{val}億' if i < 5 else f'{val}億\n歷史新高!'
+        color = bar.get_facecolor()
+        ax.text(i, y_pos, label, ha='center', fontsize=12 if i < 5 else 13,
+                fontweight='bold', color=color)
+    ax.set_xticks(range(len(months)))
+    ax.set_xticklabels(months, fontsize=12)
+    ax.set_ylabel('外銷訂單（億美元）', fontsize=13, color=blue_hex)
+    ax.set_title('台灣外銷訂單：3月份首破900億美元大關！年增幅 +65.9%', fontsize=17,
                  fontweight='bold', color=blue_hex, pad=15)
-    ax.legend(fontsize=13, loc='upper right')
+    ax.axhline(y=900, color='#1a7a4a', linewidth=2, linestyle='--', alpha=0.7)
+    ax.text(5.4, 905, '900億里程碑', fontsize=11, color='#1a7a4a', fontweight='bold')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
-    ax.set_ylim(0, 2400)
+    ax.invert_yaxis()
+    ax.set_ylim(0, 1050)
+    ax.invert_yaxis()
     fig.tight_layout()
     charts['capex_war'] = fig_to_image_stream(fig)
 
-    # ── 7. Sector Radar ──
+    # ── 7. 產業動能雷達圖 ──
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-    categories = ['低軌衛星', 'AI 散熱', '國防軍工', '傳產價值',
-                  'AI 軟體', 'AI 硬體', '能源電力']
-    N = len(categories)
-    current = [9, 8, 7, 8, 4, 6, 7]
-    future = [9, 9, 8, 7, 6, 8, 8]
+    categories_r = ['AI 硬體\n(費半)', '台灣\n外銷訂單', '金管會\n政策利多', '能源股\n築底', '軟體股\n動能']
+    N = len(categories_r)
+    current = [9, 9, 8, 5, 3]
+    future = [9, 9, 9, 7, 5]
     angles = [n / float(N) * 2 * pi for n in range(N)]
     angles += angles[:1]
     current += current[:1]
     future += future[:1]
     ax.plot(angles, current, 'o-', color=blue_hex, linewidth=2.5,
-            label='本週動能', markersize=8)
+            label='當前評分', markersize=8)
     ax.fill(angles, current, alpha=0.15, color=blue_hex)
     ax.plot(angles, future, 's--', color=orange_hex, linewidth=2.5,
-            label='未來 1-3 月展望', markersize=8)
+            label='3-6月展望', markersize=8)
     ax.fill(angles, future, alpha=0.1, color=orange_hex)
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=14, fontweight='bold')
+    ax.set_xticklabels(categories_r, fontsize=12, fontweight='bold')
     ax.set_ylim(0, 10)
     ax.set_yticks([2, 4, 6, 8, 10])
-    ax.set_yticklabels(['2', '4', '6', '8', '10'], fontsize=11, color='gray')
-    ax.legend(fontsize=14, loc='upper right', bbox_to_anchor=(1.3, 1.1))
-    ax.set_title('產業動能雷達圖', fontsize=18,
+    ax.set_yticklabels(['2', '4', '6', '8', '10'], fontsize=10, color='gray')
+    ax.legend(fontsize=12, loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    ax.set_title('市場動能雷達圖', fontsize=18,
                  fontweight='bold', color=blue_hex, pad=30)
     fig.tight_layout()
     charts['sector_radar'] = fig_to_image_stream(fig)
 
-    # ── 8. Asset Drawdown ──
-    fig, ax = plt.subplots(figsize=(10, 3.5))
-    assets = ['比特幣', '白銀\n(盤中)', '軟體股\nETF', '費半\nYTD', '黃金']
-    drawdowns = [-30, -40, -20, -3.12, -12]
-    dd_colors = ['#C0392B', '#E74C3C', red_hex, orange_hex, '#F39C12']
-    bars = ax.barh(assets, drawdowns, color=dd_colors, height=0.5,
-                   edgecolor='white', linewidth=1.5)
-    for bar, val in zip(bars, drawdowns):
-        ax.text(bar.get_width() - 1, bar.get_y() + bar.get_height() / 2,
-                f'{val}%', va='center', ha='right', fontsize=15,
-                fontweight='bold', color='white')
-    ax.axvline(x=0, color='#ccc', linewidth=1.2)
-    ax.set_title('本週各類資產回檔幅度', fontsize=18,
+    # ── 8. 金管會政策鬆綁時間軸 ──
+    fig, ax = plt.subplots(figsize=(9, 3.5))
+    policies = ['主動ETF持股\n10%→25%', '外債擔保\n換台幣', '台股配息\n美元化', '雙重分配\n制度建立', '外資投信\n進駐台灣']
+    impact = [9, 7, 8, 6, 8]
+    p_colors = [blue_hex, blue_light_hex, accent_hex, orange_hex, '#1a7a4a']
+    bars = ax.bar(range(len(policies)), impact, color=p_colors,
+                  width=0.55, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, impact)):
+        ax.text(i, val + 0.2, f'{val}/10', ha='center', fontsize=13,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_xticks(range(len(policies)))
+    ax.set_xticklabels(policies, fontsize=11)
+    ax.set_ylabel('政策影響力（1-10）', fontsize=13, color=blue_hex)
+    ax.set_title('金管會政策鬆綁矩陣：制度×場域×產品三線並進', fontsize=17,
                  fontweight='bold', color=blue_hex, pad=15)
-    ax.set_xlim(-50, 5)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
-    ax.tick_params(axis='both', labelsize=13)
+    ax.set_ylim(0, 11.5)
     fig.tight_layout()
-    charts['asset_drawdown'] = fig_to_image_stream(fig)
+    charts['capex_ratio'] = fig_to_image_stream(fig)
 
-    # ── 9. Allocation Pie ──
+    # ── 9. 資產配置建議 ──
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.5, 3.5))
-    labels_c = ['科技龍頭 ETF', '價值/傳產', '債券/現金', '黃金/商品']
-    sizes_c = [25, 35, 30, 10]
-    colors_c = [blue_hex, green_hex, '#95a5a6', orange_hex]
+    labels_c = ['台積電/AI硬體', '主動型ETF', '現金', '能源/防禦', '其他']
+    sizes_c = [35, 25, 20, 10, 10]
+    colors_c = [blue_hex, blue_light_hex, '#95a5a6', orange_hex, accent_hex]
     wedges, texts, autotexts = ax1.pie(
         sizes_c, labels=labels_c, autopct='%1.0f%%', colors=colors_c,
-        startangle=90, pctdistance=0.75, textprops={'fontsize': 13})
+        startangle=90, pctdistance=0.75, textprops={'fontsize': 11})
     for at in autotexts:
         at.set_fontweight('bold')
         at.set_color('white')
-    ax1.set_title('穩健型配置', fontsize=16, fontweight='bold', color=blue_hex, pad=15)
+    ax1.set_title('積極型（AI硬體主線）', fontsize=15, fontweight='bold', color=blue_hex, pad=15)
 
-    labels_g = ['AI 硬體/半導體', '低軌衛星/散熱', '傳產循環', '軟體(低接)', '現金']
-    sizes_g = [30, 20, 25, 15, 10]
-    colors_g = [blue_hex, purple_hex, green_hex, accent_hex, '#95a5a6']
+    labels_g = ['現金', '台積電', '防禦科技', '債券/黃金', '其他']
+    sizes_g = [35, 25, 20, 10, 10]
+    colors_g = ['#95a5a6', blue_hex, blue_light_hex, orange_hex, accent_hex]
     wedges2, texts2, autotexts2 = ax2.pie(
         sizes_g, labels=labels_g, autopct='%1.0f%%', colors=colors_g,
-        startangle=90, pctdistance=0.75, textprops={'fontsize': 12})
+        startangle=90, pctdistance=0.75, textprops={'fontsize': 11})
     for at in autotexts2:
         at.set_fontweight('bold')
         at.set_color('white')
-    ax2.set_title('積極型配置', fontsize=16, fontweight='bold', color=blue_hex, pad=15)
+    ax2.set_title('穩健型（等換股完成）', fontsize=15, fontweight='bold', color=blue_hex, pad=15)
     fig.tight_layout()
     charts['allocation'] = fig_to_image_stream(fig)
 
-    # ── 10. Japan Defense Spending ──
-    fig, ax = plt.subplots(figsize=(7, 3.5))
-    pm_names = ['安倍', '菅義偉', '岸田文雄', '石破茂', '高市早苗\n(2026E)']
-    defense_pct = [5.3, 5.0, 7.0, 7.5, 8.5]
-    bar_colors_jp = [accent_hex, accent_hex, blue_light_hex, blue_light_hex, blue_hex]
-    bars = ax.bar(pm_names, defense_pct, color=bar_colors_jp, width=0.5,
-                  edgecolor='white', linewidth=2)
-    for bar, val in zip(bars, defense_pct):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.15,
-                f'{val}%', ha='center', fontsize=14, fontweight='bold', color=blue_hex)
-    ax.set_ylabel('國防支出占一般預算比例 (%)', fontsize=13, color=blue_hex)
-    ax.set_title('日本歷任首相國防支出預算占比', fontsize=17,
+    # ── 10. 外資賣超 vs 台股走勢 ──
+    fig, ax = plt.subplots(figsize=(11, 4.0))
+    years = ['2020', '2021', '2022', '2023', '2024', '2025', '2026\nYTD']
+    foreign_sell = [-5300, -4500, -12000, 0, -6900, -5900, -4371]
+    bar_colors = [red_hex if v < 0 else green_hex for v in foreign_sell]
+    bars = ax.bar(range(len(years)), foreign_sell, color=bar_colors,
+                  width=0.55, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, foreign_sell)):
+        y_pos = val - 350 if val < 0 else val + 100
+        label = f'{val:,}億' if val != 0 else '小買'
+        ax.text(i, y_pos, label, ha='center', fontsize=11,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_xticks(range(len(years)))
+    ax.set_xticklabels(years, fontsize=12)
+    ax.set_ylabel('外資買賣超（億元）', fontsize=13, color=blue_hex)
+    ax.set_title('外資連年賣超台股：累計已超過3兆，回補是最大潛在觸媒', fontsize=17,
+                 fontweight='bold', color=blue_hex, pad=15)
+    ax.axhline(y=0, color='#ccc', linewidth=1.5)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_color('#ddd')
+    ax.spines['left'].set_color('#ddd')
+    fig.tight_layout()
+    charts['asset_ytd'] = fig_to_image_stream(fig)
+
+    # ── 11. 主動型ETF表現 ──
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+    etf_names = ['992A', '981A', '994A', '主動型\nETF均值', '0050\n台灣50', '大盤\n加權指數']
+    etf_ytd = [62, 60, 61, 43, 28, 25]
+    etf_colors = ['#1a7a4a', '#1a7a4a', '#1a7a4a', green_hex, blue_light_hex, '#aaa']
+    bars = ax.bar(range(len(etf_names)), etf_ytd, color=etf_colors,
+                  width=0.55, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, etf_ytd)):
+        y_pos = val + 1.5
+        ax.text(i, y_pos, f'+{val}%', ha='center', fontsize=13,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_xticks(range(len(etf_names)))
+    ax.set_xticklabels(etf_names, fontsize=12)
+    ax.set_ylabel('YTD 漲幅（%）', fontsize=13, color=blue_hex)
+    ax.set_title('主動型ETF全面跑贏大盤：3檔突破60%，均值+43%（2026 YTD）', fontsize=17,
                  fontweight='bold', color=blue_hex, pad=15)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_color('#ddd')
     ax.spines['left'].set_color('#ddd')
-    ax.set_ylim(0, 10)
+    ax.set_ylim(0, 75)
+    # Bracket for active ETF
+    ax.axhline(y=43, color=blue_hex, linewidth=1.5, linestyle='--', alpha=0.5)
+    ax.text(5.4, 44, '均值43%', fontsize=10, color=blue_hex)
     fig.tight_layout()
-    charts['japan_defense'] = fig_to_image_stream(fig)
+    charts['global_stocks_ytd'] = fig_to_image_stream(fig)
+
+    # ── 12. 油價 & PMI 雙指標 ──
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.0))
+    # Oil price trend
+    oil_months = ['2月', '3月', '3月底', '4月', '4/23']
+    oil_prices = [88, 92, 85, 95, 100]
+    oil_colors = [blue_light_hex, blue_light_hex, red_hex, orange_hex, orange_hex]
+    ax1.plot(range(len(oil_months)), oil_prices, 'o-', color=orange_hex,
+             linewidth=2.5, markersize=9)
+    ax1.fill_between(range(len(oil_months)), oil_prices, 80, alpha=0.12, color=orange_hex)
+    ax1.set_xticks(range(len(oil_months)))
+    ax1.set_xticklabels(oil_months, fontsize=11)
+    ax1.set_ylabel('每桶美元', fontsize=12, color=orange_hex)
+    ax1.set_title('油價重回$100大關\n中東地緣政治升溫', fontsize=14, fontweight='bold',
+                  color=orange_hex, pad=10)
+    ax1.axhline(y=100, color=orange_hex, linewidth=2, linestyle='--', alpha=0.7)
+    ax1.text(4.1, 100.5, '$100關卡', fontsize=10, color=orange_hex, fontweight='bold')
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.set_ylim(78, 110)
+    # PMI bar
+    pmi_months = ['1月', '2月', '3月', '4月(預)']
+    pmi_vals = [49.5, 50.2, 50.8, 51.2]
+    pmi_colors = [red_hex, blue_light_hex, blue_hex, blue_hex]
+    bars = ax2.bar(range(len(pmi_months)), pmi_vals, color=pmi_colors,
+                   width=0.5, edgecolor='white', linewidth=1.5)
+    for bar, val in zip(bars, pmi_vals):
+        ax2.text(bar.get_x() + bar.get_width()/2, val + 0.1, f'{val}',
+                 ha='center', fontsize=13, fontweight='bold',
+                 color=bar.get_facecolor())
+    ax2.axhline(y=50, color='#ccc', linewidth=2, linestyle='--')
+    ax2.text(3.5, 50.05, '榮枯線50', fontsize=10, color='gray')
+    ax2.set_xticks(range(len(pmi_months)))
+    ax2.set_xticklabels(pmi_months, fontsize=11)
+    ax2.set_ylabel('PMI 指數', fontsize=12, color=blue_hex)
+    ax2.set_title('美國PMI緩步回升\n企業備貨性需求推動', fontsize=14, fontweight='bold',
+                  color=blue_hex, pad=10)
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.set_ylim(48, 53)
+    fig.tight_layout()
+    charts['commodity_ytd'] = fig_to_image_stream(fig)
+
+    # ── 13. 台灣薪資結構 ──
+    fig, ax = plt.subplots(figsize=(10, 3.8))
+    industries = ['金融業', '資通訊', '電力能源', '製造業', '整體均值', '教育服務', '住宿餐飲']
+    avg_salary = [7.4, 6.8, 6.5, 5.8, 9.0, 3.5, 3.1]
+    ind_colors = ['#1a7a4a', blue_hex, blue_light_hex, accent_hex, orange_hex, '#aaa', red_hex]
+    bars = ax.barh(range(len(industries)), avg_salary, color=ind_colors,
+                   height=0.55, edgecolor='white', linewidth=1.5)
+    for bar, val in zip(bars, avg_salary):
+        x_pos = bar.get_width() + 0.1
+        label = f'{val}萬' if val != 9.0 else f'{val}萬（含年終）'
+        ax.text(x_pos, bar.get_y() + bar.get_height() / 2,
+                label, va='center', ha='left', fontsize=12,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_yticks(range(len(industries)))
+    ax.set_yticklabels(industries, fontsize=12)
+    ax.set_xlabel('月薪（萬元）', fontsize=13, color=blue_hex)
+    ax.set_title('台灣薪資極化：金融/科技 vs 服務業差距擴大（2026.3月）', fontsize=17,
+                 fontweight='bold', color=blue_hex, pad=15)
+    ax.axvline(x=4.0, color=orange_hex, linewidth=1.5, linestyle='--', alpha=0.7)
+    ax.text(4.05, 6.7, '中位數\n3.9-4萬', fontsize=10, color=orange_hex)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_color('#ddd')
+    ax.spines['left'].set_color('#ddd')
+    ax.set_xlim(0, 12)
+    ax.invert_yaxis()
+    fig.tight_layout()
+    charts['sector_rotation'] = fig_to_image_stream(fig)
+
+    # ── 14. 台股換股邏輯 ──
+    fig, ax = plt.subplots(figsize=(10, 3.5))
+    stock_cat = ['台積電\n(未崩)', '大型權值\n(穩健)', '中型股\n(換手)', '小型股\n(多殺多)', '中石化等\n(獲利了結)']
+    stock_change = [2.5, 1.8, -3.5, -6.2, -8.5]
+    s_colors = [green_hex, blue_light_hex, red_hex, red_hex, '#8B0000']
+    bars = ax.bar(range(len(stock_cat)), stock_change, color=s_colors,
+                  width=0.5, edgecolor='white', linewidth=1.5)
+    for i, (bar, val) in enumerate(zip(bars, stock_change)):
+        y_pos = val + 0.3 if val >= 0 else val - 0.7
+        label = f'+{val:.1f}%' if val > 0 else f'{val:.1f}%'
+        ax.text(i, y_pos, label, ha='center', fontsize=14,
+                fontweight='bold', color=bar.get_facecolor())
+    ax.set_xticks(range(len(stock_cat)))
+    ax.set_xticklabels(stock_cat, fontsize=12)
+    ax.set_ylabel('單日漲跌幅（%）', fontsize=13, color=blue_hex)
+    ax.set_title('台股換股行情：資金從中小型股撤出，回流大型權值股', fontsize=17,
+                 fontweight='bold', color=blue_hex, pad=15)
+    ax.axhline(y=0, color='#ccc', linewidth=1)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_color('#ddd')
+    ax.spines['left'].set_color('#ddd')
+    ax.set_ylim(-11, 5)
+    fig.tight_layout()
+    charts['sp500_earnings'] = fig_to_image_stream(fig)
 
     return charts
 
@@ -523,38 +699,38 @@ def slide_01_cover(prs):
     _add_circle(slide, Inches(-0.8), Inches(5.5), Inches(2), CORP_BLUE_DARK)
     _add_rounded_rect(slide, Inches(1), Inches(1.2), Inches(11.3), Inches(5), WHITE)
     _add_text_box(slide, Inches(1.5), Inches(1.5), Inches(10), Inches(0.8),
-                  '2026 W6 財金股市週報', font_size=44, font_color=CORP_BLUE,
+                  '早晨財經速解讀 — 市場分析報告', font_size=38, font_color=CORP_BLUE,
                   bold=True, alignment=PP_ALIGN.CENTER)
-    _add_text_box(slide, Inches(1.5), Inches(2.5), Inches(10), Inches(0.8),
-                  '全面市場分析 ‧ 總經觀察 ‧ 產業趨勢 ‧ 投資策略',
-                  font_size=24, font_color=CORP_BLUE_DARK,
+    _add_text_box(slide, Inches(1.5), Inches(2.5), Inches(10), Inches(0.9),
+                  '費半破萬點 硬體狂飆 軟體失速｜台股多殺多 股市大換手',
+                  font_size=20, font_color=CORP_BLUE_DARK,
                   bold=True, alignment=PP_ALIGN.CENTER)
     _add_bg_rect(slide, Inches(4.5), Inches(3.5), Inches(4.3), Inches(0.05), CORP_BLUE)
     _add_text_box(slide, Inches(1.5), Inches(3.8), Inches(10), Inches(0.5),
-                  '川普推文道瓊創歷史新高 50,115 | 比特幣崩跌 30% | 日本大選高市完全執政',
+                  '費半連17紅站上10,000點 | SOX vs IGV 極端分化 | 台股成交量歷史新高',
                   font_size=14, font_color=MID_GRAY, alignment=PP_ALIGN.CENTER)
-    _add_text_box(slide, Inches(1.5), Inches(4.5), Inches(10), Inches(0.5),
-                  'PMI 52.6 重返擴張 | 低軌衛星爆發 | 價值股創歷史新高',
+    _add_text_box(slide, Inches(1.5), Inches(4.4), Inches(10), Inches(0.5),
+                  '台灣外銷訂單首破900億美元 | 金管會持股上限10%→25% | 主動ETF均值+43%',
                   font_size=14, font_color=MID_GRAY, alignment=PP_ALIGN.CENTER)
-    _add_text_box(slide, Inches(1.5), Inches(5.3), Inches(10), Inches(0.4),
-                  '2026 年 2 月 3 日 — 2 月 9 日', font_size=12,
+    _add_text_box(slide, Inches(1.5), Inches(5.1), Inches(10), Inches(0.4),
+                  '2026 年 4 月 24 日', font_size=12,
                   font_color=MID_GRAY, alignment=PP_ALIGN.CENTER)
-    _add_text_box(slide, Inches(4), Inches(6.5), Inches(5.3), Inches(0.5),
-                  '財金號角 ‧ 股癌投資 — 綜合分析', font_size=18,
+    _add_text_box(slide, Inches(3.5), Inches(6.5), Inches(6.3), Inches(0.5),
+                  '早晨財經速解讀 — 2026.04.24 綜合分析', font_size=18,
                   font_color=WHITE, bold=True, alignment=PP_ALIGN.CENTER)
 
 
 def slide_02_contents(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '目錄 CONTENTS', '本週全方位市場觀點與投資建議')
+    _add_header_bar(slide, '目錄 CONTENTS', '2026.04.24 費半破萬 + 台股換手 + 外銷創高 + 金管會鬆綁')
     _add_footer(slide, 2)
 
     sections = [
-        {'num': '01', 'title': '市場總覽', 'desc': '美股週表現\n台股與亞股動態', 'color': CORP_BLUE},
-        {'num': '02', 'title': '重大事件', 'desc': '川普推文拉盤\n日本大選\n比特幣崩跌', 'color': CORP_BLUE_LIGHT},
-        {'num': '03', 'title': '總體經濟', 'desc': 'PMI 突破擴張\n價值 vs 成長\nAI 就業衝擊', 'color': ACCENT_BLUE},
-        {'num': '04', 'title': '產業趨勢', 'desc': '低軌衛星爆發\n散熱族群突破\n資本支出軍備賽', 'color': ACCENT_PURPLE},
+        {'num': '01', 'title': '市場總覽', 'desc': '費半破萬點連17紅\n台股多殺多換股\n成交量1.3兆歷史新高', 'color': CORP_BLUE},
+        {'num': '02', 'title': '硬軟分化', 'desc': '硬體狂飆vs軟體失速\n特斯拉財報解析\n比特幣資金輪動', 'color': CORP_BLUE_LIGHT},
+        {'num': '03', 'title': '台灣市場', 'desc': '外銷訂單創新高\n金管會三線鬆綁\n主動ETF表現', 'color': ACCENT_BLUE},
+        {'num': '04', 'title': '投資策略', 'desc': '硬體主線配置\n換股邏輯分析\n觀察重點展望', 'color': ACCENT_PURPLE},
     ]
 
     start_x = Inches(0.8)
@@ -576,21 +752,21 @@ def slide_02_contents(prs):
 
 def slide_03_part_one(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_section_divider(slide, '01', 'PART ONE.', '本週市場總覽 — 美股、台股、亞股全景',
-                         '道瓊 +4.67% 創歷史新高 | 費半 -3.12% | 台股 +2.48%')
+    _add_section_divider(slide, '01', 'PART ONE.', '市場總覽 — 費半破萬 台股換手',
+                         '費半連17紅+1.71% | 三大指數收黑 | 台股成交1.3兆歷史新高')
 
 
 def slide_04_us_weekly(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '美股四大指數本週表現', '2026/2/3-2/7 收盤數據')
+    _add_header_bar(slide, '美股四大指數 — 費半破萬點！連17紅', '2026/04/23 — 道瓊-0.36% 標普-0.41% 那指-0.89% 費半+1.71%')
     _add_footer(slide, 4)
 
     idx_data = [
-        ('道瓊工業', '50,115', '+1,207 pt', '+4.67%', ACCENT_GREEN),
-        ('標普 500', '6,026', '-15 pt', '-0.24%', ACCENT_RED),
-        ('納斯達克', '19,523', '-323 pt', '-1.63%', ACCENT_RED),
-        ('費城半導體', '4,856', '-156 pt', '-3.12%', ACCENT_RED),
+        ('道瓊工業', '49,310', '-179 pt', '-0.36%', ACCENT_RED),
+        ('標普 500', '7,108', '-29 pt', '-0.41%', ACCENT_RED),
+        ('納斯達克', '24,438', '-219 pt', '-0.89%', ACCENT_RED),
+        ('費城半導體', '10,078', '+169 pt', '+1.71%', ACCENT_GREEN),
     ]
     for i, (name, price, change, pct, color) in enumerate(idx_data):
         x = Inches(0.4) + i * Inches(3.2)
@@ -609,467 +785,369 @@ def slide_04_us_weekly(prs, charts):
     slide.shapes.add_picture(img, Inches(1.2), Inches(3.2), Inches(11), Inches(3.7))
 
 
-def slide_05_asia(prs, charts):
+def slide_05_taiwan_market(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '台股與亞股本週動態', '日本大選行情爆發 | 台股強勢抗跌')
+    _add_header_bar(slide, '台股多殺多換手 — 成交量創歷史新高', '台北收38,434點(+720pt) | 成交1.3兆 | 外資僅賣27億 | 換股非換手')
     _add_footer(slide, 5)
 
     img = charts['asia_weekly']
-    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.5))
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.8), Inches(3.5))
 
-    _add_rounded_rect(slide, Inches(8.2), Inches(1.3), Inches(4.8), Inches(3.5), WHITE)
-    asia_lines = [
-        {'text': '本週亞股重點', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+    _add_rounded_rect(slide, Inches(8.3), Inches(1.3), Inches(4.7), Inches(3.5), WHITE)
+    taiwan_lines = [
+        {'text': '台股換股行情解析', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  台股 32,611 點（+788, 2/9）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  美股暴殺但台股跌幅極小，異常強勁', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  4/24 台北股市 +720pt = 38,434', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  單日成交歷史新高：1.3兆', 'size': 14, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  日經大漲 +1,000 點（2/9 開盤）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  高市早苗大選壓倒性勝利推動', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  自民黨 352 席（過半僅需 233）', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  外資賣超僅27億（幅度小）', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  主要是「內資換股」非外資撤退', 'size': 13, 'color': ACCENT_ORANGE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  美中電話會談正面', 'size': 14, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  川普 4 月訪中計劃確認', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  台積電仍強勢，未崩盤', 'size': 13, 'color': ACCENT_GREEN},
+        {'text': '  中小型股：中石化等多殺多', 'size': 13, 'color': ACCENT_RED},
     ]
-    _add_multiline_text_box(slide, Inches(8.4), Inches(1.45), Inches(4.4), Inches(3.2),
-                            asia_lines)
+    _add_multiline_text_box(slide, Inches(8.5), Inches(1.45), Inches(4.3), Inches(3.2),
+                            taiwan_lines)
 
     _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
     bottom = [
-        {'text': '台股觀察重點', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+        {'text': '換股的核心邏輯', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  台股 500 點以內都是正常波動，收 31,921 點（2/5）→ 32,611 點（2/9），整週反彈強勁', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  外資系統單尚未大規模啟動，台灣 PMI 57 領先全球，製造業上行循環支撐強勁', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  低軌衛星族群成避風港，大盤跌時跌少，漲時逆勢大漲 — 但盤好時需提防資金輪出', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  台股今年成為全球第六大市場，1,000點以內、8,000億以內均屬正常波動。上引線長 = 籌碼換手，非行情結束', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  資金從過熱中小型股撤出 → 回流台積電等基本面確定的大型股 = 行情換股升級', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
     ]
     _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), bottom)
 
 
 def slide_06_part_two(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_section_divider(slide, '02', 'PART TWO.', '本週重大事件 — 牽動全球市場走向',
-                         '川普推文 | 日本大選 | 比特幣崩跌 | 資產去槓桿')
+    _add_section_divider(slide, '02', 'PART TWO.', '硬體 vs 軟體 — 極端分化',
+                         'SOX連17紅 | IGV軟體大跌 | 特斯拉財報 | 比特幣資金輪動')
 
 
-def slide_07_trump_china(prs):
+def slide_07_hardware_software(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '川普推文拉盤 & 美中關係破冰', '道瓊 +1,207 點創歷史新高 50,115')
+    _add_header_bar(slide, '硬體 vs 軟體極端分化', 'AI基礎建設需求爆發 | 軟體商業模式仍在調整 | 籌碼高度集中')
     _add_footer(slide, 7)
 
-    # Trump event card
-    _add_rounded_rect(slide, Inches(0.3), Inches(1.4), Inches(6.2), Inches(3.2), WHITE)
-    trump_lines = [
-        {'text': '川普推文效應', 'size': 18, 'color': CORP_BLUE, 'bold': True},
+    img = charts['software_pe']
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.8))
+
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(4.9), Inches(5.5), WHITE)
+    hw_sw_lines = [
+        {'text': '分化背後的邏輯', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  週五（2/7）川普發文慶祝道瓊突破 5 萬點', 'size': 14, 'color': CHARCOAL},
-        {'text': '  道瓊指數大漲 +1,207 點，收 50,115 點（歷史新高）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  本輪科技股中期回檔似乎告一段落', 'size': 14, 'color': CHARCOAL},
+        {'text': '  費半連17紅，站上1萬點', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  AI基建訂單4-5年結構性循環', 'size': 13, 'color': DARK_GRAY},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  市場解讀：政治面消息產生大幅轉捩', 'size': 14, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  但須觀察後續 — 1 月非農延至週三公佈', 'size': 13, 'color': MID_GRAY},
-        {'text': '  值缺數持續下滑的效果值得關注', 'size': 13, 'color': MID_GRAY},
+        {'text': '  IGV軟體ETF昨跌近3%', 'size': 14, 'color': ACCENT_RED, 'bold': True},
+        {'text': '  AI商業模式仍在調整期', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  不確定AI是否顛覆既有軟體業', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  短線警示：費半技術指標', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  17天未跌 = 籌碼有點擁擠', 'size': 13, 'color': ACCENT_ORANGE},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  IGV目前在強勢築底', 'size': 13, 'color': CORP_BLUE},
+        {'text': '  抄底資金太多暫時跌不深', 'size': 12, 'color': DARK_GRAY},
     ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(1.55), Inches(5.6), Inches(3.0),
-                            trump_lines)
-
-    # US-China card
-    _add_rounded_rect(slide, Inches(6.8), Inches(1.4), Inches(6.2), Inches(3.2), WHITE)
-    china_lines = [
-        {'text': '美中關係破冰', 'size': 18, 'color': CORP_BLUE, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  川普與習近平進行「精彩且深入」的電話會談', 'size': 14, 'color': CHARCOAL},
-        {'text': '  確認 4 月份川普將訪中', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  討論議題：貿易、軍事、台灣、俄烏、伊朗', 'size': 13, 'color': CHARCOAL},
-        {'text': '  習近平提升大豆採購至 2,000 萬噸', 'size': 13, 'color': CHARCOAL},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  全球外交窗口打開', 'size': 14, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  李在明訪陸、加拿大訪陸、英國開啟中英黃金時代', 'size': 12, 'color': MID_GRAY},
-    ]
-    _add_multiline_text_box(slide, Inches(7.1), Inches(1.55), Inches(5.6), Inches(3.0),
-                            china_lines)
-
-    # Bottom
-    _add_rounded_rect(slide, Inches(0.3), Inches(4.9), Inches(12.7), Inches(1.9), CORP_BLUE)
-    bottom = [
-        {'text': '市場影響評估', 'size': 18, 'color': WHITE, 'bold': True},
-        {'text': '', 'size': 5, 'color': WHITE},
-        {'text': '  短期利多：川普政治操盤穩定股市信心，道瓊創歷史新高帶動傳產與價值股資金流入', 'size': 15, 'color': WHITE},
-        {'text': '  中期觀察：美中關係改善可降低全球貿易不確定性，有利製造業上行循環延續', 'size': 15, 'color': SKY_BLUE},
-        {'text': '  風險提醒：每次股災後政治不確定性縮小 → 股市反彈 → 需觀察反彈力道是否持續', 'size': 15, 'color': SKY_BLUE},
-    ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(5.05), Inches(12), Inches(1.5), bottom)
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.5), Inches(5.3),
+                            hw_sw_lines)
 
 
-def slide_08_japan(prs, charts):
+def slide_08_fund_flow(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '日本大選：高市早苗完全執政', '自民黨 352 席壓倒性勝利 — 國防、半導體、核能政策加速')
+    _add_header_bar(slide, '資金輪動 — AI硬體獨佔市場', '單一敘事風險：只看AI硬體 能源/消費/公用事業全遭抽離')
     _add_footer(slide, 8)
 
-    # Defense chart
-    img = charts['japan_defense']
-    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7), Inches(3.5))
-
-    # Policy impact
-    _add_rounded_rect(slide, Inches(7.6), Inches(1.3), Inches(5.4), Inches(3.5), WHITE)
-    jp_lines = [
-        {'text': '高市政策三箭', 'size': 17, 'color': CORP_BLUE, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  國防擴張 → GDP 2% 目標', 'size': 15, 'color': ACCENT_RED, 'bold': True},
-        {'text': '  三菱重工、川崎重工、三菱電機受惠', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  國防支出上看 10 兆日元', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  半導體戰略 → 台積電九州擴廠', 'size': 15, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  追加 $170 億投資，3 奈米製程同步落地', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  九州成為「半導體大洲」', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  食品消費稅 → 暫降零（2 年）', 'size': 15, 'color': ACCENT_ORANGE, 'bold': True},
-        {'text': '  財政赤字疑慮升高，日債壓力持續', 'size': 12, 'color': DARK_GRAY},
-    ]
-    _add_multiline_text_box(slide, Inches(7.8), Inches(1.45), Inches(5.0), Inches(3.2),
-                            jp_lines)
-
-    # Bottom: Market Impact
-    _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
-    impact = [
-        {'text': '市場影響：日股結構性分化', 'size': 17, 'color': CORP_BLUE, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  利多：軍工股、設備股、先進製造、電力、出口族群 → 政策題材+資金行情驅動日股創高', 'size': 14, 'color': ACCENT_GREEN},
-        {'text': '  壓力：高股息防禦股失去殖利率優勢 | 10Y 國債 2.5%、超長期 4%+ → 股票相對吸引力受侵蝕', 'size': 14, 'color': ACCENT_RED},
-        {'text': '  日元中期偏弱 | 財政赤字 GDP 250% | 日本核心通膨 2.4%（亞洲最高）→ 日銀政策兩難', 'size': 14, 'color': ACCENT_ORANGE},
-    ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), impact)
-
-
-def slide_09_bitcoin(prs, charts):
-    slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '比特幣崩跌與風險資產大退潮', 'BTC 跌破 $63,000 | 白銀盤中 -17% | 軟體股 -20% YTD')
-    _add_footer(slide, 9)
-
-    # BTC chart
-    img = charts['btc_crash']
-    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.5))
-
-    # Asset drawdown chart
-    img2 = charts['asset_drawdown']
-    slide.shapes.add_picture(img2, Inches(0.3), Inches(5.0), Inches(6.5), Inches(1.8))
-
-    # Key points
-    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(4.9), Inches(5.5), WHITE)
-    btc_lines = [
-        {'text': '風險資產全面退潮', 'size': 17, 'color': ACCENT_RED, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  比特幣 YTD -30%', 'size': 15, 'color': ACCENT_RED, 'bold': True},
-        {'text': '  跌穿 $63K，川普任期漲幅全數蒸發', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  跌穿 100 週均線，200 週均線在 $60K', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  Gemini 交易所裁員 25% 關閉歐洲', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  白銀盤中暴跌 17%', 'size': 15, 'color': ACCENT_RED, 'bold': True},
-        {'text': '  中國投機資金撤出', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  軟體股 ETF YTD -20%', 'size': 15, 'color': ACCENT_RED, 'bold': True},
-        {'text': '  一個月內進入熊市', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  核心判斷', 'size': 15, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  不單純換股操作，是全面去槓桿', 'size': 13, 'color': CHARCOAL},
-        {'text': '  動能交易策略踩踏 + 系統單獲利了結', 'size': 13, 'color': CHARCOAL},
-        {'text': '  情緒未失控（VIX/VXN 未極端）', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  乖離已嚴重超跌 → 左側佈局機會', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
-    ]
-    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.5), Inches(5.2),
-                            btc_lines)
-
-
-def slide_10_part_three(prs):
-    slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_section_divider(slide, '03', 'PART THREE.', '總體經濟分析 — PMI、就業、資金輪動',
-                         'ISM PMI 52.6 | 台灣 PMI 57 | 價值股領先成長股')
-
-
-def slide_11_pmi(prs, charts):
-    slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '製造業 PMI 重返擴張：資金輪動啟動', 'ISM PMI 52.6 — 突破 3 年庫存調整')
-    _add_footer(slide, 11)
-
-    img = charts['ism_pmi']
+    img = charts['peg_trend']
     slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(8), Inches(3.5))
 
     _add_rounded_rect(slide, Inches(8.6), Inches(1.3), Inches(4.4), Inches(3.5), WHITE)
-    pmi_lines = [
-        {'text': '關鍵數據', 'size': 16, 'color': CORP_BLUE, 'bold': True},
+    flow_lines = [
+        {'text': '市場共識脫節警訊', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  美國 ISM PMI 52.6', 'size': 15, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  2022 年以來最大增幅', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  市場只剩一個敘事：AI硬體', 'size': 14, 'color': ACCENT_RED, 'bold': True},
+        {'text': '  消費/軟體/能源/公用事業', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  全面遭資金撤出', 'size': 13, 'color': ACCENT_RED},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  台灣 PMI 57（領先指標）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  「賣鏟子的」帶貨潮率先啟動', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  跨資產出現明顯背離', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  利率/油價/中東地緣政治', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  市場幾乎全部忽略', 'size': 13, 'color': DARK_GRAY},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  新訂單 + 生產指數跳升', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  用戶端庫存下滑 → 補庫存需求', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  歷史規律', 'size': 14, 'color': CORP_BLUE, 'bold': True},
-        {'text': '  PMI < 50 = 股市買點', 'size': 13, 'color': CHARCOAL},
-        {'text': '  突破 50 = 上行週期確認', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  單邊上攻動能仍強', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  但需注意共識過於集中', 'size': 13, 'color': ACCENT_ORANGE},
     ]
     _add_multiline_text_box(slide, Inches(8.8), Inches(1.45), Inches(4.0), Inches(3.2),
-                            pmi_lines)
+                            flow_lines)
 
     _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
     bottom = [
-        {'text': '總經結論：庫存上行週期 + 中期回檔 = 最佳佈建時機', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+        {'text': '大股票 vs 中小型股的警示', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  製造業上行循環已正式展開，科技股資金流往傳產實體製造業是結構性趨勢', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  歷史上庫存上行週期中的中期回檔，反而是最具吸引力的進場點', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  若最終只是大股票的勝利，大型股與中小股持續脫節 → 影響實體經濟。大多數就業仍由小型公司提供', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  納指創高 vs IGV軟體脫鉤從2025年下半年開始，是重要的市場結構警訊', 'size': 14, 'color': ACCENT_RED, 'bold': True},
     ]
     _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), bottom)
 
 
-def slide_12_value_growth(prs, charts):
+def slide_09_tesla_bitcoin(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '價值股 vs 成長股：風格大切換', '2022 年以來最大分歧 — 資金從高估值轉往低估值')
-    _add_footer(slide, 12)
+    _add_header_bar(slide, '特斯拉財報 & 比特幣資金動態', '特斯拉EPS連4季低於預期 | 散戶每日買入70億 | BTC卡在100日均線')
+    _add_footer(slide, 9)
 
-    img = charts['value_growth']
+    img = charts['taiwan_export']
     slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.5))
 
-    _add_rounded_rect(slide, Inches(8.2), Inches(1.3), Inches(4.8), Inches(3.5), WHITE)
-    val_lines = [
-        {'text': '價值股代表（持續創高）', 'size': 16, 'color': ACCENT_GREEN, 'bold': True},
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(5.0), Inches(3.5), WHITE)
+    tsla_btc_lines = [
+        {'text': '特斯拉Q1 2026重點', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  Coca-Cola (KO)', 'size': 15, 'color': CHARCOAL, 'bold': True, 'font': FONT_EN},
-        {'text': '  $60+ → $77，歷史新高', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  自由現金流回到正值', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  但EPS僅$0.25（預期$0.60）', 'size': 13, 'color': ACCENT_RED},
+        {'text': '  連續四季低於市場預期', 'size': 13, 'color': ACCENT_RED},
+        {'text': '  CAPEX增$50億至$250億', 'size': 13, 'color': DARK_GRAY},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  Walmart (WMT)', 'size': 15, 'color': CHARCOAL, 'bold': True, 'font': FONT_EN},
-        {'text': '  2026 完全噴出，持續創高', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  財報後股價跌3.56%', 'size': 14, 'color': ACCENT_RED, 'bold': True},
+        {'text': '  散戶日買入約70億美元', 'size': 13, 'color': DARK_GRAY},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  道瓊指數', 'size': 15, 'color': CHARCOAL, 'bold': True},
-        {'text': '  50,115 歷史新高，傳產推動', 'size': 12, 'color': DARK_GRAY},
-        {'text': '', 'size': 8, 'color': DARK_GRAY},
-        {'text': '  風格切換，非系統性崩盤', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  BTC：卡在100日均線', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  突破75,000-80,000才有機會', 'size': 13, 'color': DARK_GRAY},
     ]
-    _add_multiline_text_box(slide, Inches(8.4), Inches(1.45), Inches(4.4), Inches(3.2),
-                            val_lines)
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.6), Inches(3.2),
+                            tsla_btc_lines)
 
     _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
     insight = [
-        {'text': '投資啟示', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+        {'text': '散戶投資邏輯：「賣產值的就買」', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  方向先確定，方法才有意義 — 確認自己是價值型還是成長型，擇一堅持', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  「我知道我是誰，但我不知道我要去哪裡」— 不要漲時追成長、跌時改價值、震盪做波段', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  景氣低基期亂買股票 > 景氣高基期認真研究財報 — 週期位置比個股選擇更重要', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  特斯拉&比特幣：逢低買盤持續，但追高意願薄弱。電動車賣差無關緊要，市場等待自駕/robotaxi的營收貢獻', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  → 掘金熱邏輯：最後能不能挖到金不重要，賣鏟子的就繼續買。硬體 > 軟體 > 應用服務', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
     ]
     _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), insight)
 
 
-def slide_13_ai_jobs(prs):
+def slide_10_part_three(prs):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_section_divider(slide, '03', 'PART THREE.', '台灣市場 — 全面升溫',
+                         '外銷訂單首破900億 | 金管會三線鬆綁 | 主動ETF全面跑贏大盤')
+
+
+def slide_11_taiwan_exports(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, 'AI 就業衝擊與軟體股重新定價', '1 月裁員 10.8 萬人（2009 年以來最嚴重）| 軟體股 Token 經濟新模式')
+    _add_header_bar(slide, '台灣外銷訂單 — 3月首破900億美元大關', '3月份911億美元 | 年增幅+65.9% | Q1累計2,319億 | 美台逆差全球第一')
+    _add_footer(slide, 11)
+
+    img = charts['capex_war']
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.8))
+
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(4.9), Inches(5.5), WHITE)
+    export_lines = [
+        {'text': '台灣外銷訂單亮點', 'size': 16, 'color': CORP_BLUE, 'bold': True},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  3月份：911億美元（歷史首次破900億）', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  年增幅：+65.9%（爆炸性成長）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  Q1累計：2,319億，平均增速50%', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  去年全年增速已維持20-30%', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  美國對台灣進口年增596億', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  全球第一（中國減971億）', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  AI投資未放緩，反而加速', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  地緣政治衝突未影響AI需求', 'size': 12, 'color': DARK_GRAY},
+    ]
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.5), Inches(5.3),
+                            export_lines)
+
+
+def slide_12_fsc_policy(prs, charts):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
+    _add_header_bar(slide, '金管會政策鬆綁 — 台股新時代', '單一持股上限10%→25% | 外債擔保換台幣 | 股息美元化 | 亞洲資管中心')
+    _add_footer(slide, 12)
+
+    img = charts['capex_ratio']
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.5))
+
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(5.0), Inches(3.5), WHITE)
+    fsc_lines = [
+        {'text': '金管會三線並進', 'size': 16, 'color': CORP_BLUE, 'bold': True},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  ① 制度鬆綁', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  持股上限10%→25%（台積電受益）', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  外國債券Triple B+可擔保換台幣', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  ② 場域建設', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  高雄亞洲資產管理中心建立', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  銀行/保險/資管陸續進駐', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  ③ 產品和服務', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  TISA長期投資帳戶、稅賦優惠', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  家族辦公室/跨境投資', 'size': 13, 'color': ACCENT_GREEN},
+    ]
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.6), Inches(3.2),
+                            fsc_lines)
+
+    _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
+    insight = [
+        {'text': '核心：台灣從資金輸出地→資金停留地', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  持股上限放寬 → 主動ETF更貼近市場權重 → 台積電ETF回補力道增強 → 帶動指數進一步上揚', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  外資可不換匯直接配息 → 降低台股匯率風險 → 增加外資持有台股誘因', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+    ]
+    _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), insight)
+
+
+def slide_13_active_etf(prs, charts):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
+    _add_header_bar(slide, '主動型ETF全面跑贏大盤', '992A/981A/994A 突破60% | 均值+43% | 持股集中AI板塊')
     _add_footer(slide, 13)
 
-    # AI impact card
-    _add_rounded_rect(slide, Inches(0.3), Inches(1.4), Inches(6.2), Inches(2.8), WHITE)
-    ai_lines = [
-        {'text': 'AI 對就業的雙面性', 'size': 17, 'color': CORP_BLUE, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  總體：AI 帶來生產力跳升，GDP 加速', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  個體：重複性高、可標準化的職位被替代', 'size': 14, 'color': ACCENT_RED, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  1 月裁員 10.8 萬人（2009 年以來最嚴重）', 'size': 13, 'color': CHARCOAL},
-        {'text': '  科技業：調高 Capex + 同時裁員 + 投注 AI', 'size': 13, 'color': CHARCOAL},
-        {'text': '  初領失業金 23.1 萬（高於預期）', 'size': 13, 'color': CHARCOAL},
-        {'text': '  製造業職位空缺比 2023 年少 20 萬', 'size': 13, 'color': CHARCOAL},
-    ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(1.55), Inches(5.6), Inches(2.5),
-                            ai_lines)
+    img = charts['global_stocks_ytd']
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.5))
 
-    # Software stock future
-    _add_rounded_rect(slide, Inches(6.8), Inches(1.4), Inches(6.2), Inches(2.8), WHITE)
-    sw_lines = [
-        {'text': '軟體股 Token 經濟新模式', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(5.0), Inches(3.5), WHITE)
+    etf_lines = [
+        {'text': '主動ETF為何跑贏？', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  A 劇本（悲觀）', 'size': 14, 'color': ACCENT_RED, 'bold': True},
-        {'text': '  Token 成本自行吸收 → 毛利受擠壓', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  競爭對手用 Vibe Coding 產出類似產品', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  3檔ETF突破60%（992A/981A/994A）', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  均值+43%，明顯高於大盤', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  B 劇本（樂觀）', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  SEED + Token 雙軌收費 → Upsell', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  CSP Token 成本持續下降 → 毛利反升', 'size': 12, 'color': DARK_GRAY},
-        {'text': '  B2B 軟體護城河高，不易被巨頭取代', 'size': 12, 'color': DARK_GRAY},
+        {'text': '  原因：AI相關資金高度集中', 'size': 14, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  集中持股 = 貝塔值放大效應', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  注意：台積電持股上限鬆綁', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  10%→25%，未來更大受益', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  熊市時貝塔值放大 = 跌更多', 'size': 12, 'color': ACCENT_RED},
+        {'text': '  了解風險，才能正確使用', 'size': 12, 'color': DARK_GRAY},
     ]
-    _add_multiline_text_box(slide, Inches(7.1), Inches(1.55), Inches(5.6), Inches(2.5),
-                            sw_lines)
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.6), Inches(3.2),
+                            etf_lines)
 
-    # Bottom conclusion
-    _add_rounded_rect(slide, Inches(0.3), Inches(4.5), Inches(12.7), Inches(2.3), WHITE)
-    conclusion = [
-        {'text': '本週判斷', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+    _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
+    note_lines = [
+        {'text': '「ETF永動機」現象解析', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  Anthropic 推出 AI 法律軟體 → 市場解讀為「AI 正式跨進專業白領領域」→ 軟體股恐慌拋售', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  Cloudbot 等 Agent 工具崛起 → 但從 Prototype 到企業端 Workflow 整合仍有長路', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  2C 軟體被巨頭吃掉的風險高，但 2B 軟體護城河仍在 → 不應非黑即白看待', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  資安類股可能成為下一個受惠方向 — AI Agent 的權限與資料安全議題將大爆發', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
-        {'text': '  軟體股 RSI 已至 07-08 金融海嘯水位，乖離超跌但情緒未失控 → 具左側佈局價值', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
+        {'text': '  台積電股價漲太快 + 持股上限10% → 主動ETF買不夠 → 被迫買0050/0052 → ETF買ETF（永動機現象）', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  持股上限放寬後 → 主動ETF可直接配置更多台積電 → 績效更貼近市場 → 永動機現象消失', 'size': 14, 'color': ACCENT_GREEN, 'bold': True},
     ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(4.65), Inches(12), Inches(2.0),
-                            conclusion)
+    _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3),
+                            note_lines)
 
 
 def slide_14_part_four(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_section_divider(slide, '04', 'PART FOUR.', '產業趨勢 — 值得投入的方向',
-                         '低軌衛星 | AI 散熱 | 科技巨頭 Capex | 能源電力')
+    _add_section_divider(slide, '04', 'PART FOUR.', '投資策略 — 換股邏輯與配置',
+                         '硬體主線確認 | 台股換股完成後的機會 | 油價PMI | 外資觀察')
 
 
-def slide_15_sectors(prs, charts):
+def slide_15_macro_energy(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '本週值得關注產業：低軌衛星 & AI 散熱', '2026-2027 絕地大爆發的兩大方向')
+    _add_header_bar(slide, '宏觀環境 — 油價回百美元 & PMI緩升', '中東僵局加劇 | XLE能源股築底 | 企業備貨推動PMI 但實質需求偏弱')
     _add_footer(slide, 15)
 
-    # LEO Satellites
-    _add_rounded_rect(slide, Inches(0.3), Inches(1.4), Inches(6.2), Inches(5.3), WHITE)
-    leo_lines = [
-        {'text': '低軌衛星（LEO Satellite）', 'size': 18, 'color': CORP_BLUE, 'bold': True},
+    img = charts['commodity_ytd']
+    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(7.5), Inches(3.8))
+
+    _add_rounded_rect(slide, Inches(8.1), Inches(1.3), Inches(4.9), Inches(5.5), WHITE)
+    macro_lines = [
+        {'text': '宏觀三大警訊', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  動能評級：★★★★★', 'size': 15, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  市場地位', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  • 無庸置疑的強勢族群 — 大盤跌時避風港', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • 大盤跌少，逆勢漲很兇', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • 訂單數量驚人，供應鏈已全面確認', 'size': 13, 'color': DARK_GRAY},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  供應鏈延伸', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  • PCB 基板：華通、耀華、星星、Meiko', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • CCL 材料：M6 等級（非 AI 高階 M8/M9）', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • 衣布（PCB 材料）：AI Server 排擠產能', 'size': 13, 'color': DARK_GRAY},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  風險提醒', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
-        {'text': '  • 盤好時可能成為提款機（資金輪出）', 'size': 13, 'color': ACCENT_ORANGE},
-        {'text': '  • 不要追高，等回檔再介入', 'size': 13, 'color': ACCENT_ORANGE},
-    ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(1.55), Inches(5.6), Inches(5.0),
-                            leo_lines)
-
-    # AI Cooling
-    _add_rounded_rect(slide, Inches(6.8), Inches(1.4), Inches(6.2), Inches(5.3), WHITE)
-    cool_lines = [
-        {'text': 'AI 散熱（Thermal Solution）', 'size': 18, 'color': CORP_BLUE, 'bold': True},
+        {'text': '  油價重回$100：通膨隱患', 'size': 14, 'color': ACCENT_RED, 'bold': True},
+        {'text': '  美伊談判陷入僵局', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  革命衛隊退出談判', 'size': 13, 'color': ACCENT_RED},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  動能評級：★★★★☆', 'size': 15, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  本週突破', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  • 散熱族群週二集體走出去（創新高）', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • 規格確定下來 → 不確定性消除', 'size': 13, 'color': DARK_GRAY},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  技術路線確認', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  • MCL（液冷微通道）太難 → 走 Cold Plate', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • Stiffener + 2 片 Spreader 方案', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • ASP 仍然很高，建策等龍頭受惠', 'size': 13, 'color': DARK_GRAY},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  長期趨勢', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  • TDP 越來越高 → 靠近晶片端散熱是大瓶頸', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  • ASP + 訂單量都在拉高', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
-        {'text': '  • QD 類（量大）人人能做，但高端散熱仍稀缺', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  PMI回升：備貨≠實質需求', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
+        {'text': '  企業預期通膨而搶貨', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  終端需求仍偏弱', 'size': 13, 'color': DARK_GRAY},
+        {'text': '', 'size': 5, 'color': DARK_GRAY},
+        {'text': '  美國實質薪資已轉負', 'size': 14, 'color': ACCENT_RED, 'bold': True},
+        {'text': '  就業看似穩但不敢辭職', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  消費信心持續下滑', 'size': 13, 'color': DARK_GRAY},
     ]
-    _add_multiline_text_box(slide, Inches(7.1), Inches(1.55), Inches(5.6), Inches(5.0),
-                            cool_lines)
+    _add_multiline_text_box(slide, Inches(8.3), Inches(1.45), Inches(4.5), Inches(5.3),
+                            macro_lines)
 
 
-def slide_16_capex(prs, charts):
+def slide_16_stock_rotation(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '科技巨頭資本支出軍備競賽', 'Google $1,800B | Amazon $2,000B — 2026 全面翻倍')
+    _add_header_bar(slide, '台股換股完成後的機會', '外資賣超4,371億 | 外銷訂單增速65.9% | 大型股主導行情')
     _add_footer(slide, 16)
 
-    img = charts['capex_war']
-    slide.shapes.add_picture(img, Inches(0.3), Inches(1.3), Inches(10), Inches(3.8))
+    img = charts['asset_ytd']
+    slide.shapes.add_picture(img, Inches(0.2), Inches(1.3), Inches(6.8), Inches(3.5))
 
-    _add_rounded_rect(slide, Inches(10.5), Inches(1.3), Inches(2.5), Inches(3.8), WHITE)
+    img2 = charts['sp500_earnings']
+    slide.shapes.add_picture(img2, Inches(7.2), Inches(1.3), Inches(5.8), Inches(3.5))
+
+    _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), WHITE)
     note_lines = [
-        {'text': '重點', 'size': 16, 'color': CORP_BLUE, 'bold': True},
+        {'text': '台股行情的三大驅動力', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  調高 Capex', 'size': 12, 'color': CHARCOAL, 'bold': True},
-        {'text': '  反而嚇壞', 'size': 12, 'color': CHARCOAL, 'bold': True},
-        {'text': '  市場', 'size': 12, 'color': CHARCOAL, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  多頭時', 'size': 11, 'color': ACCENT_GREEN},
-        {'text': '  = 利多', 'size': 11, 'color': ACCENT_GREEN},
-        {'text': '', 'size': 3, 'color': DARK_GRAY},
-        {'text': '  空頭時', 'size': 11, 'color': ACCENT_RED},
-        {'text': '  = 燒錢', 'size': 11, 'color': ACCENT_RED},
+        {'text': '  ① 外銷訂單：增速65.9%，AI投資持續推動，台灣科技出口成全球最大受益方', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  ② 金管會鬆綁：台積電持股上限擴大，ETF回補力道增強，亞洲資管中心逐步建立', 'size': 13, 'color': DARK_GRAY},
+        {'text': '  ③ 外資回補潛力：賣超已逾4,371億，一旦外資轉向，將是台股最大正面觸媒', 'size': 14, 'color': ACCENT_ORANGE, 'bold': True},
     ]
-    _add_multiline_text_box(slide, Inches(10.6), Inches(1.4), Inches(2.3), Inches(3.6),
+    _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3),
                             note_lines)
-
-    _add_rounded_rect(slide, Inches(0.3), Inches(5.4), Inches(12.7), Inches(1.4), WHITE)
-    cap_bottom = [
-        {'text': '本週 Capex 觀察', 'size': 17, 'color': CORP_BLUE, 'bold': True},
-        {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  Google Q4 營收 $972B（超預期）+ 雲端 $177B（+48% YoY）→ 最強財報但 Capex $1,800B 嚇市場', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  Amazon 宣布 $2,000B Capex（比預期多 1/3）→ 盤後跌 10%，市場投反對票', 'size': 13, 'color': DARK_GRAY},
-        {'text': '  核心判斷：AI 軍備競賽結束前誰能保住護城河才是關鍵，短期 Capex 恐慌是情緒性拋售', 'size': 13, 'color': ACCENT_GREEN, 'bold': True},
-    ]
-    _add_multiline_text_box(slide, Inches(0.6), Inches(5.5), Inches(12), Inches(1.2),
-                            cap_bottom)
 
 
 def slide_17_part_five(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    _add_section_divider(slide, '05', 'PART FIVE.', '投資策略 — 本週佈局建議',
-                         '推薦方向 | 資產配置 | 風險管理 | 下週觀察')
+    _add_section_divider(slide, '05', 'PART FIVE.', '投資策略總結 — 2026.04.24 操作建議',
+                         '硬體主線配置 | 資產配置建議 | 風險評估 | 後市觀察重點')
 
 
 def slide_18_recommendations(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '本週推薦佈局方向', '美股 + 台股 — 族群性投資策略')
+    _add_header_bar(slide, '產業動能雷達 & 配置建議', 'AI硬體主線持續 | 換股後等大型股確認 | 外資觀察是關鍵')
     _add_footer(slide, 18)
 
     img = charts['sector_radar']
     slide.shapes.add_picture(img, Inches(0.2), Inches(1.3), Inches(5.2), Inches(5.2))
 
     _add_rounded_rect(slide, Inches(5.6), Inches(1.3), Inches(7.4), Inches(2.3), WHITE)
-    us_lines = [
-        {'text': '美股推薦方向', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+    tw_rec_lines = [
+        {'text': '積極型配置建議', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  AI 硬體（逢低佈局）：NVDA、AVGO、TSM、AMD', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → 乖離超跌，PMI 上行支撐算力需求', 'size': 12, 'color': MID_GRAY},
-        {'text': '  科技龍頭（長期持有）：GOOGL、AAPL、AMZN', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → Google 最強勢，Apple 防禦佳', 'size': 12, 'color': MID_GRAY},
-        {'text': '  傳產價值（趨勢正確）：KO、WMT、BRK.B', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → 資金輪動受益，持續創歷史新高', 'size': 12, 'color': MID_GRAY},
+        {'text': '  AI硬體/台積電 35%（費半主線確認）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  主動型ETF 25%（均值+43% 持續跑贏）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  現金 30%（等外資回補確認信號）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  能源/防禦 10%（油價支撐，築底觀察）', 'size': 13, 'color': CHARCOAL},
     ]
     _add_multiline_text_box(slide, Inches(5.8), Inches(1.4), Inches(7), Inches(2.1),
-                            us_lines)
+                            tw_rec_lines)
 
     _add_rounded_rect(slide, Inches(5.6), Inches(3.8), Inches(7.4), Inches(3.0), WHITE)
-    tw_lines = [
-        {'text': '台股推薦族群', 'size': 17, 'color': CORP_BLUE, 'bold': True},
+    us_rec_lines = [
+        {'text': '穩健型配置建議', 'size': 17, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  低軌衛星（本週最強）：華通、耀華、同步基板', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → 訂單確認，避風港效應，但盤好時注意獲利了結', 'size': 12, 'color': MID_GRAY},
-        {'text': '  AI 散熱（突破確認中）：建策、奇鋐、超眾', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → 規格確定（Cold Plate），ASP 拉高，觀察持續性', 'size': 12, 'color': MID_GRAY},
-        {'text': '  記憶體（缺貨行情）：相關概念股', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → Apple 被漲 70-80%，記憶體短缺打擊但也推升價格', 'size': 12, 'color': MID_GRAY},
-        {'text': '  能源電力（中長期）：核能概念股', 'size': 14, 'color': CHARCOAL, 'bold': True},
-        {'text': '  → AI 時代的「新石油」，3-5 年大趨勢', 'size': 12, 'color': MID_GRAY},
+        {'text': '  現金 35%（等換股確認完成後進場）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  台積電/大型權值 25%（換股後主力）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  防禦型科技ETF 20%（0050/台灣50）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  債券/黃金 10%（系統性對沖）', 'size': 13, 'color': CHARCOAL},
+        {'text': '  其他 10%', 'size': 13, 'color': CHARCOAL},
+        {'text': '', 'size': 4, 'color': DARK_GRAY},
+        {'text': '  注意：費半17連紅後短線擁擠，別追', 'size': 11, 'color': ACCENT_ORANGE, 'bold': True},
     ]
     _add_multiline_text_box(slide, Inches(5.8), Inches(3.9), Inches(7), Inches(2.8),
-                            tw_lines)
+                            us_rec_lines)
 
 
 def slide_19_allocation(prs, charts):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _add_bg_rect(slide, Inches(0), Inches(0), SLIDE_W, SLIDE_H, LIGHT_GRAY)
-    _add_header_bar(slide, '資產配置與風險管理', '穩健型 vs 積極型 — 根據投資屬性選擇')
+    _add_header_bar(slide, '資產配置圖解 & 後市觀察重點', '2026.04.24 — AI硬體主線確立，外資回補仍是最大觸媒')
     _add_footer(slide, 19)
 
     img = charts['allocation']
@@ -1077,32 +1155,29 @@ def slide_19_allocation(prs, charts):
 
     _add_rounded_rect(slide, Inches(9.0), Inches(1.3), Inches(4.0), Inches(3.5), WHITE)
     risk_lines = [
-        {'text': '風險管理要點', 'size': 16, 'color': CORP_BLUE, 'bold': True},
+        {'text': '後市觀察重點', 'size': 16, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  1. 波動放大 → 降槓桿', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  大 A 出現就先降部位', 'size': 12, 'color': MID_GRAY},
+        {'text': '  1. 費半籌碼是否鬆動', 'size': 13, 'color': CHARCOAL, 'bold': True},
+        {'text': '  17連紅後短線擁擠待觀察', 'size': 12, 'color': MID_GRAY},
         {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  2. 看族群不看個股', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  用族群性角度判斷資金流向', 'size': 12, 'color': MID_GRAY},
+        {'text': '  2. 台股換股完成確認', 'size': 13, 'color': CHARCOAL, 'bold': True},
+        {'text': '  大型股是否接棒中小型股', 'size': 12, 'color': MID_GRAY},
         {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  3. 創新高的才追蹤', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  反彈不追，創新高才有持續性', 'size': 12, 'color': MID_GRAY},
+        {'text': '  3. 油價持守$100關卡', 'size': 13, 'color': CHARCOAL, 'bold': True},
+        {'text': '  公債殖利率是否連帶反應', 'size': 12, 'color': MID_GRAY},
         {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  4. 7:3 法則', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  70% 指數 + 30% 選股', 'size': 12, 'color': MID_GRAY},
-        {'text': '', 'size': 4, 'color': DARK_GRAY},
-        {'text': '  5. 賣掉的就是非洲', 'size': 13, 'color': CHARCOAL, 'bold': True},
-        {'text': '  減碼的不追回，等下個符合條件的', 'size': 12, 'color': MID_GRAY},
+        {'text': '  4. 外資回補信號出現', 'size': 13, 'color': CHARCOAL, 'bold': True},
+        {'text': '  4,371億賣超待回補', 'size': 12, 'color': MID_GRAY},
     ]
     _add_multiline_text_box(slide, Inches(9.2), Inches(1.4), Inches(3.6), Inches(3.3),
                             risk_lines)
 
     _add_rounded_rect(slide, Inches(0.3), Inches(5.1), Inches(12.7), Inches(1.7), CORP_BLUE)
     summary = [
-        {'text': '本週核心策略', 'size': 18, 'color': WHITE, 'bold': True},
+        {'text': '核心策略總結', 'size': 18, 'color': WHITE, 'bold': True},
         {'text': '', 'size': 5, 'color': WHITE},
-        {'text': '  左側從來不悲觀，右側從來不樂觀 — 乖離超跌 + 情緒未失控 = 左側佈局機會浮現', 'size': 15, 'color': WHITE},
-        {'text': '  保持本業收入，源源不絕的收入才有彎腰撿鑽石的空間', 'size': 15, 'color': SKY_BLUE},
+        {'text': '  費半破萬點確認AI硬體主線；台股換股 = 行情升級非結束。外銷訂單+65.9%是台股最強基本面支撐', 'size': 15, 'color': WHITE},
+        {'text': '  外資4,371億賣超回補是最大潛在觸媒，金管會鬆綁持續加油，台股長期多頭格局未變', 'size': 14, 'color': SKY_BLUE},
     ]
     _add_multiline_text_box(slide, Inches(0.6), Inches(5.25), Inches(12), Inches(1.3), summary)
 
@@ -1114,37 +1189,36 @@ def slide_20_summary(prs):
     _add_circle(slide, Inches(-0.8), Inches(5.5), Inches(2), CORP_BLUE_DARK)
 
     _add_text_box(slide, Inches(1), Inches(0.5), Inches(11), Inches(0.8),
-                  '本週總結 & 下週觀察重點', font_size=32, font_color=WHITE,
+                  '2026.04.24 重點回顧 & 後市展望', font_size=32, font_color=WHITE,
                   bold=True, alignment=PP_ALIGN.CENTER)
     _add_bg_rect(slide, Inches(5), Inches(1.3), Inches(3.3), Inches(0.04), WHITE)
 
     _add_rounded_rect(slide, Inches(0.5), Inches(1.6), Inches(12.3), Inches(3.2), WHITE)
     summary_lines = [
-        {'text': '本週五大重點回顧', 'size': 18, 'color': CORP_BLUE, 'bold': True},
+        {'text': '本集五大重點回顧', 'size': 18, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  1. 川普推文救市：道瓊 +1,207 點創歷史新高 50,115，但科技股仍承壓（費半 -3.12%）', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  2. 風險資產退潮：比特幣 -30%、白銀 -17%、軟體股 -20% — 全面去槓桿而非單一利空', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  3. 日本大選變局：高市 352 席完全執政 → 國防擴張 + 半導體投資 + 消費稅減免', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  4. PMI 重返擴張：ISM 52.6 突破 3 年庫存調整，台灣 PMI 57 → 製造業上行循環確認', 'size': 14, 'color': DARK_GRAY},
-        {'text': '  5. 產業爆發訊號：低軌衛星避風港 + 散熱族群突破 + 記憶體缺貨 → 輪動加速', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  1. 費半破萬點連17紅：+1.71%收10,078點，三大指數收黑。硬體爆發vs軟體失速，AI基建需求4-5年結構循環確認', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  2. 台股多殺多換股：成交1.3兆創歷史新高，外資僅賣27億，資金從中小型股流向大型權值。行情升級非結束', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  3. 台灣外銷訂單創紀錄：3月份911億美元首破900億大關，年增+65.9%，Q1累計2,319億，AI投資加速不減', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  4. 金管會三線並進：持股上限10%→25%，外債換台幣，美元計價股息，亞洲資管中心建立加速', 'size': 14, 'color': DARK_GRAY},
+        {'text': '  5. 主動ETF全面跑贏：992A/981A/994A突破60%，均值+43%，持股集中AI板塊放大貝塔效應', 'size': 14, 'color': DARK_GRAY},
     ]
     _add_multiline_text_box(slide, Inches(0.8), Inches(1.7), Inches(11.7), Inches(3.0),
                             summary_lines)
 
     _add_rounded_rect(slide, Inches(0.5), Inches(5.0), Inches(12.3), Inches(1.8), WHITE)
     next_lines = [
-        {'text': '下週觀察重點', 'size': 18, 'color': CORP_BLUE, 'bold': True},
+        {'text': '後市觀察重點', 'size': 18, 'color': CORP_BLUE, 'bold': True},
         {'text': '', 'size': 5, 'color': DARK_GRAY},
-        {'text': '  美國 1 月非農就業數據（延至週三公佈）— 值缺數持續下滑的效果', 'size': 14, 'color': CHARCOAL},
-        {'text': '  日本大選後政策落地速度 — 國防支出 & 消費稅減免時程', 'size': 14, 'color': CHARCOAL},
-        {'text': '  科技股反彈力道是否持續 — 川普效應能撐多久？', 'size': 14, 'color': CHARCOAL},
-        {'text': '  比特幣能否守住川普防線（$60K）— 200 週均線攻防戰', 'size': 14, 'color': CHARCOAL},
+        {'text': '  費半連17紅後籌碼擁擠程度（短線整理空間）；台股換股能否順利完成，大型股接棒訊號', 'size': 14, 'color': CHARCOAL},
+        {'text': '  油價$100是否持守（通膨風險 → 公債殖利率影響）；外資4,371億賣超是否開始回補', 'size': 14, 'color': CHARCOAL},
+        {'text': '  台灣外銷訂單是否維持高增速；金管會政策落地效果與亞洲資管中心實質進駐進度', 'size': 14, 'color': CHARCOAL},
     ]
     _add_multiline_text_box(slide, Inches(0.8), Inches(5.1), Inches(11.7), Inches(1.6),
                             next_lines)
 
     _add_text_box(slide, Inches(2), Inches(7.0), Inches(9.3), Inches(0.4),
-                  '資料來源：財金號角（早晨財經速解讀 2/5, 2/6, 2/9）‧ 股癌投資 EP633 | 財金週報 W6',
+                  '資料來源：早晨財經速解讀 | 分析日期：2026-04-24 | 本報告僅供參考，非投資建議',
                   font_size=11, font_color=SKY_BLUE, alignment=PP_ALIGN.CENTER)
 
 
@@ -1173,59 +1247,58 @@ def build_presentation():
     print('  [3/20] Part 1 divider')
 
     slide_04_us_weekly(prs, charts)
-    print('  [4/20] US weekly indices')
+    print('  [4/20] US indices — SOX 10,000 milestone')
 
-    slide_05_asia(prs, charts)
-    print('  [5/20] Asia markets')
+    slide_05_taiwan_market(prs, charts)
+    print('  [5/20] Taiwan market / volume record')
 
     slide_06_part_two(prs)
     print('  [6/20] Part 2 divider')
 
-    slide_07_trump_china(prs)
-    print('  [7/20] Trump & China')
+    slide_07_hardware_software(prs, charts)
+    print('  [7/20] Hardware vs Software divergence')
 
-    slide_08_japan(prs, charts)
-    print('  [8/20] Japan election')
+    slide_08_fund_flow(prs, charts)
+    print('  [8/20] Fund flow rotation')
 
-    slide_09_bitcoin(prs, charts)
-    print('  [9/20] Bitcoin crash')
+    slide_09_tesla_bitcoin(prs, charts)
+    print('  [9/20] Tesla earnings & Bitcoin')
 
     slide_10_part_three(prs)
     print('  [10/20] Part 3 divider')
 
-    slide_11_pmi(prs, charts)
-    print('  [11/20] ISM PMI')
+    slide_11_taiwan_exports(prs, charts)
+    print('  [11/20] Taiwan export orders record')
 
-    slide_12_value_growth(prs, charts)
-    print('  [12/20] Value vs Growth')
+    slide_12_fsc_policy(prs, charts)
+    print('  [12/20] FSC policy deregulation')
 
-    slide_13_ai_jobs(prs)
-    print('  [13/20] AI & Jobs')
+    slide_13_active_etf(prs, charts)
+    print('  [13/20] Active ETF performance')
 
     slide_14_part_four(prs)
     print('  [14/20] Part 4 divider')
 
-    slide_15_sectors(prs, charts)
-    print('  [15/20] Sectors: LEO & Cooling')
+    slide_15_macro_energy(prs, charts)
+    print('  [15/20] Macro — oil price & PMI')
 
-    slide_16_capex(prs, charts)
-    print('  [16/20] Tech Capex War')
+    slide_16_stock_rotation(prs, charts)
+    print('  [16/20] Taiwan stock rotation analysis')
 
     slide_17_part_five(prs)
     print('  [17/20] Part 5 divider')
 
     slide_18_recommendations(prs, charts)
-    print('  [18/20] Recommendations')
+    print('  [18/20] Investment recommendations')
 
     slide_19_allocation(prs, charts)
-    print('  [19/20] Allocation')
+    print('  [19/20] Asset allocation')
 
     slide_20_summary(prs)
-    print('  [20/20] Summary')
+    print('  [20/20] Summary & outlook')
 
     prs.save(OUTPUT_PPTX)
-    print(f'\nPresentation saved to: {OUTPUT_PPTX}')
-    return OUTPUT_PPTX
+    print(f'\n✅ Saved: {OUTPUT_PPTX}')
 
 
 if __name__ == '__main__':
